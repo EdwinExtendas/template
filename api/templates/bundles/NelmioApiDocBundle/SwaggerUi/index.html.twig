@@ -1,0 +1,19 @@
+{% extends '@!NelmioApiDoc/SwaggerUi/index.html.twig' %}
+
+{% block header %}
+    <a id="logo" href="https://www.extendas.com/"><img style="background-color: #f0f0f0;" src="{{ asset('images/logo-Extendas.svg') }}" alt="Extendas"></a>
+{% endblock header %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        header:before {
+            background-color: #f0f0f0;
+        }
+
+        #swagger-ui.api-platform .info .title {
+            color: #3b4151;
+        }
+    </style>
+
+{% endblock stylesheets %}

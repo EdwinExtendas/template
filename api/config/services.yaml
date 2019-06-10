@@ -1,0 +1,57 @@
+parameters:
+    env(MERCURE_PUBLISH_URL): ''
+    env(MERCURE_JWT_SECRET): ''
+    locale: 'en'
+
+services:
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            # parameters
+            $encryption_key: '%env(ENCRYPTION_KEY)%'
+            $cms_cors_domain: '%env(CMS_CORS_DOMAIN)%'
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
+
+    # MOBYPAY API GUZZLE CLIENT
+    app.mp_api_guzzle_handler:
+        class: '\GuzzleHttp\HandlerStack'
+        factory:  '\GuzzleHttp\HandlerStack::create'
+
+    app.mp_api_guzzle_client:
+        class: 'GuzzleHttp\Client'
+        arguments: [{base_uri: '%env(MOBYPAY_API_ROOT_URL)%', handler: '@app.mp_api_guzzle_handler'}]
+
+    # MOBYPAY AUTHENTICATION GUZZLE CLIENT
+    app.mp_auth_guzzle_handler:
+        class: '\GuzzleHttp\HandlerStack'
+        factory:  '\GuzzleHttp\HandlerStack::create'
+
+    app.mp_auth_guzzle_client:
+        class: 'GuzzleHttp\Client'
+        arguments: [{base_uri: '%env(MOBYPAY_AUTH_ROOT_URL)%', handler: '@app.mp_auth_guzzle_handler'}]
+
+    mobypay_logger:
+        class: Symfony\Bridge\Monolog\Logger
+        arguments: [mobypay]
+        calls:
+            - [pushHandler, ['@mobypay_logger_handler']]
+
+    mobypay_logger_handler:
+        class: Monolog\Handler\StreamHandler
+        arguments: ['%kernel.root_dir%/../var/log/%kernel.environment%.mobypay.log']
+
+    App\Service\MobyPayService:
+        arguments:
+            $api_client: '@app.mp_api_guzzle_client'
+            $auth_client: '@app.mp_auth_guzzle_client'
+            $logger: '@mobypay_logger'
+
+    Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter: ~
+

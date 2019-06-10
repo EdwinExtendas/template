@@ -1,0 +1,40 @@
+parameters:
+    env(MERCURE_PUBLISH_URL): ''
+    env(MERCURE_JWT_SECRET): ''
+
+services:
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            # parameters
+            $encryption_key: '%env(ENCRYPTION_KEY)%'
+
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
+
+    app.mp_api_guzzle_client:
+        class: 'App\Test\Client'
+
+    app.mp_auth_guzzle_client:
+        class: 'App\Test\Client'
+
+    App\Service\MobyPayService:
+        arguments:
+            $api_client: '@app.mp_api_guzzle_client'
+            $auth_client: '@app.mp_auth_guzzle_client'
+
+    App\Test\PublisherClient: ~
+
+    Symfony\Component\Mercure\Publisher:
+        arguments:
+            $hubUrl: '%env(MERCURE_PUBLISH_URL)%'
+            $jwtProvider: '@mercure.hub.default.jwt_provider'
+            $httpClient: '@App\Test\PublisherClient'
+
+    'Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter': ~

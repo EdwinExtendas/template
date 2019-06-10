@@ -1,0 +1,9 @@
+RewriteEngine on
+
+RewriteCond %{REQUEST_URI}  /bundles/.*$
+RewriteRule .* - [L]
+
+RewriteCond %{REQUEST_URI}  /images/.*$
+RewriteRule .* - [L]
+
+RewriteRule ^(.*)$ /index.php/$1 [L]
